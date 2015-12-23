@@ -28,8 +28,32 @@ Partial Public Class Form1
     Private Sub button1_Click_1(sender As Object, e As System.EventArgs) Handles button1.Click
         Dim data As Byte() = System.IO.File.ReadAllBytes(MapVisualStudioPath("~\images\NoImage.jpg"))
         Me.pictureBox1.Image = ResizeImage(data, 1.5, 1.5)
-
     End Sub ' button1_Click
+
+
+    Public Shared Function MyResizeImage(data As Byte(), hasNonDefaultImage As Boolean) As Byte()
+        If data Is Nothing Then
+            Return Nothing
+        End If
+
+        Dim size As Double = DirectCast(IIf(hasNonDefaultImage, 2.5, 0.5), Double)
+
+        Return MyResizeImage(data, size, size)
+    End Function ' MyResizeImage
+
+
+    Public Shared Function MyResizeImage(data As Byte(), width As Double, height As Double) As Byte()
+        Dim ba As Byte() = Nothing
+
+        Using img As System.Drawing.Image = ResizeImage(data, width, height)
+            Using ms As New System.IO.MemoryStream()
+                img.Save(ms, System.Drawing.Imaging.ImageFormat.Png)
+                ba = ms.ToArray()
+            End Using
+        End Using
+
+        Return ba
+    End Function ' MyResizeImage
 
 
     Public Shared Function Cm2Pixel(img As System.Drawing.Image, WidthInCm As Double) As Integer
@@ -57,11 +81,18 @@ Partial Public Class Form1
             img = System.Drawing.Image.FromStream(ms)
         End Using
 
-        Dim size As System.Drawing.Size = Cm2Pixel(img, width, height)
+        Dim maxSize As System.Drawing.Size = Cm2Pixel(img, width, height)
 
-        Return ResizeImage(img, size.Width, size.Height)
-    End Function ' ResizeImage
+        Dim ratioX As Double = CDbl(maxSize.Width) / img.Width
+        Dim ratioY As Double = CDbl(maxSize.Height) / img.Height
+        Dim ratio As Double = System.Math.Min(ratioX, ratioY)
 
+        Dim newWidth As Integer = CInt(img.Width * ratio)
+        Dim newHeight As Integer = CInt(img.Height * ratio)
+
+        'return ResizeImage(img, width, height);
+        Return ResizeImage(img, newWidth, newHeight)
+    End Function
 
 
     ''' <summary>
@@ -93,7 +124,6 @@ Partial Public Class Form1
 
         Return destImage
     End Function ' ResizeImage
-
 
 
 

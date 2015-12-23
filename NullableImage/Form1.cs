@@ -36,6 +36,37 @@ namespace NullableImage
             
         } // End Sub button1_Click
 
+
+
+        public static byte[] MyResizeImage(byte[] data, bool hasNonDefaultImage)
+        {
+            if(data == null)
+                return null;
+
+            double size = hasNonDefaultImage ? 2.5 : 0.5;
+            return MyResizeImage(data, size, size);
+        } // End Function MyResizeImage 
+
+
+        public static byte[] MyResizeImage(byte[] data, double width, double height)
+        {
+            byte[] ba = null;
+
+            using (System.Drawing.Image img = ResizeImage(data, width, height))
+            {
+
+                using (System.IO.MemoryStream ms = new System.IO.MemoryStream())
+                {
+                    img.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                    ba = ms.ToArray();
+                } // End using ms
+
+            } // End Using img 
+
+            return ba;
+        } // End Function MyResizeImage 
+
+
         public static int Cm2Pixel(System.Drawing.Image img, double WidthInCm)
         {
             return Cm2Pixel(img, WidthInCm, WidthInCm).Width;
@@ -63,10 +94,17 @@ namespace NullableImage
                 img = System.Drawing.Image.FromStream(ms);
             }
 
-            System.Drawing.Size size = Cm2Pixel(img, width, height);
+            System.Drawing.Size maxSize = Cm2Pixel(img, width, height);
+
+            double ratioX = (double)maxSize.Width / img.Width;
+            double ratioY = (double)maxSize.Height / img.Height;
+            double ratio = System.Math.Min(ratioX, ratioY);
+
+            int newWidth = (int)(img.Width * ratio);
+            int newHeight = (int)(img.Height * ratio);
 
             //return ResizeImage(img, width, height);
-            return ResizeImage(img, size.Width, size.Height);
+            return ResizeImage(img, newWidth, newHeight);
         }
           
 
