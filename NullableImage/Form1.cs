@@ -61,7 +61,7 @@ namespace NullableImage
         0x" + System.BitConverter.ToString(data).Replace("-", string.Empty) + @" 
         AS varbinary(MAX) 
     ) 
-) 
+) AS RPT_File 
 ";
 
 
