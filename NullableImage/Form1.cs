@@ -31,10 +31,88 @@ namespace NullableImage
 
         private void button1_Click(object sender, System.EventArgs e)
         {
+            byte[] data = System.IO.File.ReadAllBytes(MapVisualStudioPath(@"~\images\NoImage.jpg"));
+            this.pictureBox1.Image = ResizeImage(data, 1.5, 1.5);
+            
+        } // End Sub button1_Click
+
+        public static int Cm2Pixel(System.Drawing.Image img, double WidthInCm)
+        {
+            return Cm2Pixel(img, WidthInCm, WidthInCm).Width;
+        } // End Function Cm2Pixel
+
+
+        public static System.Drawing.Size Cm2Pixel(System.Drawing.Image img, double WidthInCm, double HeightInCm)
+        {
+            float sngWidth = (float)WidthInCm; //cm
+            float sngHeight = (float)HeightInCm; //cm
+            
+            sngWidth *= 0.393700787f * img.HorizontalResolution; // x-Axis pixel
+            sngHeight *= 0.393700787f * img.VerticalResolution; // y-Axis pixel
+            
+            return new System.Drawing.Size((int)sngWidth, (int)sngHeight);
+        } // End Function Cm2Pixel
+
+
+        public static System.Drawing.Bitmap ResizeImage(byte[] data, double width, double height)
+        {
+            System.Drawing.Image img = null;
+
+            using (System.IO.MemoryStream ms = new System.IO.MemoryStream(data))
+            {
+                img = System.Drawing.Image.FromStream(ms);
+            }
+
+            System.Drawing.Size size = Cm2Pixel(img, width, height);
+
+            //return ResizeImage(img, width, height);
+            return ResizeImage(img, size.Width, size.Height);
+        }
+          
+
+
+        /// <summary>
+        /// Resize the image to the specified width and height.
+        /// </summary>
+        /// <param name="image">The image to resize.</param>
+        /// <param name="width">The width to resize to.</param>
+        /// <param name="height">The height to resize to.</param>
+        /// <returns>The resized image.</returns>
+        public static System.Drawing.Bitmap ResizeImage(System.Drawing.Image image, int width, int height)
+        {
+            System.Drawing.Rectangle destRect = new System.Drawing.Rectangle(0, 0, width, height);
+            System.Drawing.Bitmap destImage = new System.Drawing.Bitmap(width, height);
+
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+
+            using (System.Drawing.Graphics graphics = System.Drawing.Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+
+                using (System.Drawing.Imaging.ImageAttributes wrapMode = 
+                    new System.Drawing.Imaging.ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(System.Drawing.Drawing2D.WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height
+                        , System.Drawing.GraphicsUnit.Pixel, wrapMode);
+                }
+            }
+
+            return destImage;
+        }
+
+
+
+        private void TestFileToHexString()
+        {
             string hex = FileToHexString(@"~\images\SingleTransparentPixel.png");
             System.Windows.Forms.Clipboard.SetText(hex);
             System.Console.WriteLine(hex);
-        } // End Sub button1_Click
+        } // End Sub TestFileToHexString
 
 
         public static string FileToHexString(string filename)
@@ -67,6 +145,8 @@ namespace NullableImage
 
             // return System.BitConverter.ToString(data).Replace("-", string.Empty);
         } // End Function ImageToHexString
+
+
 
 
         public static void HexStringToFile()
